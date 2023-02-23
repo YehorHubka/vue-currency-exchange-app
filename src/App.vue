@@ -30,6 +30,60 @@
           :disabledInput="true"
         />
       </div>
+
+      <h2 class="main__title">Currency rates</h2>
+      <loader v-if="!rates" />
+      <div class="rates">
+        <div class="rates__info">
+          <div class="rates__info-title">
+            Choose interested currency to have an rates information:
+          </div>
+          <select class="rates__info-select" v-model="interestedCurrency">
+            <option
+              v-for="(currency, idx) in interestedCurrencyList"
+              :key="idx"
+              :value="currency"
+            >
+              {{ currency }}
+            </option>
+          </select>
+        </div>
+        <div class="rates__cards">
+          <rateCard
+            v-for="(rate, i) in choosenRatesDataFromStorage"
+            :key="i"
+            :name="rate.asset_id_quote"
+            :rate="rate.rate"
+          />
+        </div>
+        <div class="rates__controls">
+          <button class="btn" @click="openModal = true">
+            + Add more cards
+          </button>
+          <button class="btn">Refresh data</button>
+        </div>
+      </div>
+      <Teleport to="body">
+        <cardModal
+          :openModal="openModal"
+          title="Add new card"
+          @close="(val) => (openModal = val)"
+        >
+          <form action="#" @submit.prevent="cardFormHandler">
+            <input list="rates" v-model="addCardName" class="search-input" />
+            <datalist id="rates">
+              <option
+                v-for="(rate, i) in rates"
+                :key="i"
+                :value="rate.asset_id_quote"
+              ></option>
+            </datalist>
+            <button class="btn btn-search" type="submit">
+              + Add rate card
+            </button>
+          </form>
+        </cardModal>
+      </Teleport>
     </div>
   </main>
 </template>
@@ -38,18 +92,22 @@
 import { defineComponent } from "vue";
 import Header from "./components/Header.vue";
 import loader from "./components/loader.vue";
+import rateCard from "./components/rateCard.vue";
 import exchangeField from "./components/exchangeField.vue";
+import cardModal from "./components/cardModal.vue";
 import { mapActions, mapState } from "vuex";
+
 export default defineComponent({
   name: "App",
   data() {
     return {
-      // data: {
-      //   time: "2023-02-23T11:49:53.5230000Z",
-      //   asset_id_base: "USD",
-      //   asset_id_quote: "BTC",
-      //   rate: (0.00004213317298765248).toFixed(7),
-      // },
+      addCardName: "",
+      openModal: false,
+      choosenRatesData: [] as Array<any>,
+      choosenRatesDataFromStorage: [] as Array<any>,
+      choosenRates: ["USD", "EUR", "UAH", "BTC", "ETH"],
+      interestedCurrencyList: ["USD", "EUR", "UAH"],
+      interestedCurrency: "USD",
       originalCurrencyInput: 1,
       desiredCurrencyInput: 0,
       originalCurrency: "USD",
@@ -59,7 +117,7 @@ export default defineComponent({
     };
   },
   methods: {
-    ...mapActions(["getCurrencyData"]),
+    ...mapActions(["getCurrencyData", "getAllCurrencyData"]),
     switchCurrency() {
       let temporaryValue = this.originalCurrency;
       this.originalCurrency = this.desiredCurrency;
@@ -77,8 +135,40 @@ export default defineComponent({
         this.data.rate.toString().length > 7
           ? this.data.rate.toFixed(7)
           : this.data.rate;
-
       this.desiredCurrencyInput = this.currentRate * this.originalCurrencyInput;
+    },
+    async getAllDataToShow() {
+      await this.getAllCurrencyData([this.interestedCurrency, false]);
+
+      this.choosenRatesData = this.choosenRates
+        .map((i) => {
+          return this.rates.find((item: any) => {
+            return item.asset_id_quote == i;
+          });
+        })
+        .filter((i) => i !== undefined);
+
+      localStorage.setItem(
+        "choosenRatesData",
+        JSON.stringify(this.choosenRatesData)
+      );
+
+      this.choosenRatesDataFromStorage = JSON.parse(
+        localStorage.getItem("choosenRatesData") || "[]"
+      );
+    },
+    cardFormHandler() {
+      if (this.addCardName) {
+        this.choosenRates.push(this.addCardName);
+        localStorage.setItem(
+          "choosenRatesData",
+          JSON.stringify(this.choosenRatesDataFromStorage)
+        );
+      }
+      console.log("this.choosenRates", this.choosenRates);
+
+      this.addCardName = "";
+      this.openModal = false;
     },
   },
   watch: {
@@ -87,6 +177,9 @@ export default defineComponent({
     },
     desiredCurrency() {
       this.getDataOnChange();
+    },
+    interestedCurrency() {
+      this.getAllDataToShow();
     },
     originalCurrencyInput(newState) {
       if (newState < 0 || newState == "") {
@@ -97,14 +190,17 @@ export default defineComponent({
   },
   async mounted() {
     await this.getDataOnChange();
+    await this.getAllDataToShow();
   },
   computed: {
-    ...mapState(["data"]),
+    ...mapState(["data", "rates"]),
   },
   components: {
     Header,
     exchangeField,
     loader,
+    rateCard,
+    cardModal,
   },
 });
 </script>
@@ -112,7 +208,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import url(./assets/scss/main.scss);
 .main {
-  padding: 50px 0;
+  padding: 40px 0;
   &__wrapper {
     max-width: 1000px;
     padding: 0 15px;
@@ -177,5 +273,73 @@ export default defineComponent({
       background: #222;
     }
   }
+}
+.rates {
+  &__info {
+    max-width: 250px;
+    margin: 30px auto;
+    text-align: center;
+    &-title {
+      margin-bottom: 10px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    &-select {
+      width: 80px;
+      height: 40px;
+      padding: 0 0 0 5px;
+      background: #fff;
+      border: 2px solid #555;
+      border-radius: 5px;
+      font-size: 16px;
+      outline: 0;
+    }
+  }
+  &__cards {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  &__controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+  }
+}
+.btn {
+  border: 0;
+  width: 160px;
+  height: 50px;
+  border-radius: 5px;
+  background: #555;
+  color: #fff;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.3s ease all;
+  position: relative;
+  &:hover {
+    background: #222;
+  }
+}
+.search-input {
+  outline: 0;
+  height: 50px;
+  padding: 0 15px;
+  width: 100%;
+  background: #fff;
+  border: 2px solid #555;
+  border-radius: 5px;
+  font-size: 16px;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+.btn-search {
+  width: 100%;
 }
 </style>

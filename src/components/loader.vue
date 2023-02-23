@@ -1,5 +1,5 @@
 <template>
-  <div class="loader">
+  <div class="loader" style="text-align: center; margin-top: 50px">
     <img src="../assets/loading.gif" width="40" al="loading" />
   </div>
 </template>
