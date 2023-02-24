@@ -4,6 +4,9 @@
     <div class="main__wrapper" v-if="rates">
       <h1 class="main__title">Choose currency bellow:</h1>
       <div class="exchange">
+        <div class="exchange__alert" v-if="isBigValue">
+          You can exchange maximum {{ maxValue }} {{ originalCurrency }}
+        </div>
         <exchangeField
           :currencyList="currencyList"
           v-model:currencyInput="originalCurrencyInput"
@@ -56,7 +59,7 @@
           </button>
           <button class="btn" @click="refreshData" :disabled="refreshDisabled">
             Refresh data
-            <span v-if="refreshDisabled">({{ refreshDisabledDuration }})</span>
+            <span v-if="refreshDisabled">({{ disabledDuration }})</span>
           </button>
         </div>
       </div>
@@ -82,7 +85,14 @@
         </cardModal>
       </Teleport>
     </div>
-    <loader v-else />
+    <div class="server_info" v-else>
+      <loader />
+      <p>
+        If you see loader to long - <br />
+        coinapi.io REST API dont give an answer <br />
+        with needed data for App working
+      </p>
+    </div>
   </main>
 </template>
 
@@ -100,7 +110,7 @@ export default defineComponent({
   data() {
     return {
       refreshDisabled: false,
-      refreshDisabledDuration: 5,
+      disabledDuration: 5,
       addCardName: "",
       openModal: false,
       choosenRatesData: [] as Array<any>,
@@ -114,7 +124,9 @@ export default defineComponent({
       desiredCurrency: "BTC",
       currencyList: ["USD", "EUR", "UAH", "GBP", "BTC", "ETH", "BNB", "XRP"],
       currentRate: 0,
-      startRate: 0,
+      isBigValue: false,
+      maximumValue: 10000,
+      ratesForUSD: [] as Array<any>,
     };
   },
   methods: {
@@ -141,8 +153,12 @@ export default defineComponent({
     async getAllDataToShow() {
       await this.getAllRates([this.interestedCurrency, false]);
 
-      if (!JSON.parse(localStorage.getItem("choosenRates") || "[]")) {
+      if (!!JSON.parse(localStorage.getItem("choosenRates") || "[]")) {
         localStorage.setItem("choosenRates", JSON.stringify(this.choosenRates));
+        localStorage.setItem("ratesForUSD", JSON.stringify(this.rates));
+        this.ratesForUSD = JSON.parse(
+          localStorage.getItem("ratesForUSD") || "[]"
+        );
       } else {
         this.choosenRatesFromStorage = JSON.parse(
           localStorage.getItem("choosenRates") || "[]"
@@ -166,7 +182,7 @@ export default defineComponent({
         );
       }
       this.choosenRatesFromStorage = JSON.parse(
-        localStorage.getItem("choosenRatesData") || "[]"
+        localStorage.getItem("choosenRates") || "[]"
       );
       this.getAllDataToShow();
 
@@ -174,9 +190,9 @@ export default defineComponent({
       this.openModal = false;
     },
     countDownTimer() {
-      if (this.refreshDisabledDuration > 0) {
+      if (this.disabledDuration > 0) {
         setTimeout(() => {
-          this.refreshDisabledDuration -= 1;
+          this.disabledDuration -= 1;
           this.countDownTimer();
         }, 1000);
       }
@@ -184,11 +200,11 @@ export default defineComponent({
     refreshData() {
       this.getAllDataToShow();
       this.refreshDisabled = true;
-      this.refreshDisabledDuration = 5;
+      this.disabledDuration = 5;
       this.countDownTimer();
       setTimeout(() => {
         this.refreshDisabled = false;
-      }, this.refreshDisabledDuration * 1000);
+      }, this.disabledDuration * 1000);
     },
   },
   watch: {
@@ -205,6 +221,9 @@ export default defineComponent({
       if (newState < 0 || newState == "") {
         this.originalCurrencyInput = 1;
       }
+      newState > this.maxValue
+        ? (this.isBigValue = true)
+        : (this.isBigValue = false);
       this.desiredCurrencyInput = newState * this.currentRate;
     },
   },
@@ -214,6 +233,17 @@ export default defineComponent({
   },
   computed: {
     ...mapState(["data", "rates"]),
+    maxValue(): number {
+      let rate = 0;
+      if (this.originalCurrency !== "USD") {
+        rate = this.ratesForUSD.filter(
+          (i) => i.asset_id_quote == this.originalCurrency
+        )[0].rate;
+      } else {
+        rate = 1;
+      }
+      return rate * this.maximumValue;
+    },
   },
   components: {
     Header,
@@ -238,12 +268,22 @@ export default defineComponent({
     text-align: center;
     font-weight: 900;
     font-size: 30px;
-    margin: 0 0 10px;
+    margin: 0 0 30px;
   }
 }
 .exchange {
   margin: 0 auto 60px;
   max-width: 320px;
+  position: relative;
+  &__alert {
+    position: absolute;
+    width: 100%;
+    top: -15px;
+    left: 0;
+    text-align: center;
+    color: #f00;
+    font-size: 12px;
+  }
   &__info {
     text-align: center;
     font-size: 14px;
@@ -370,5 +410,8 @@ export default defineComponent({
   text-align: center;
   max-width: 600px;
   margin: 50px auto;
+  p {
+    color: #aaa;
+  }
 }
 </style>

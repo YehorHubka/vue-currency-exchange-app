@@ -20,7 +20,7 @@ export default createStore({
 			// free key from API (100 gets per day from REST)
 			// google 9BB1685B-3563-436C-AA37-CAC8FFDCF6F6
 			// rabler 22BE6FFA-21EF-4612-8E47-CE0505683190
-			// mail.ru 3DB9D937-1B34-4979-9D45-566ADA46A55A
+			// mail 3DB9D937-1B34-4979-9D45-566ADA46A55A
 			
 			await fetch(url, {
 				"method": "GET",
@@ -43,7 +43,6 @@ export default createStore({
 		// 		"headers": {
 		// 			'cache-control': 'public,max-age=120',
 		// 			'content-type': 'application/json; charset=utf-8',
-
 		// 		}
 		// 	}).then(res => res.json()).then(data => commit('setRates', data.rates))
 		// }
