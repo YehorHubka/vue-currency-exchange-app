@@ -24,7 +24,7 @@ export default createStore({
 			
 			await fetch(url, {
 				"method": "GET",
-				"headers": {'X-CoinAPI-Key': '9BB1685B-3563-436C-AA37-CAC8FFDCF6F6'}
+				"headers": {'X-CoinAPI-Key': '22BE6FFA-21EF-4612-8E47-CE0505683190'}
 			}).then(res => res.json()).then(data => commit('setData', data))
 		},
 		async getAllRates({commit}, [base, quote]) {
@@ -32,8 +32,20 @@ export default createStore({
 			
 			await fetch(url, {
 				"method": "GET",
-				"headers": {'X-CoinAPI-Key': '9BB1685B-3563-436C-AA37-CAC8FFDCF6F6'}
+				"headers": {'X-CoinAPI-Key': '22BE6FFA-21EF-4612-8E47-CE0505683190'}
 			}).then(res => res.json()).then(data => commit('setRates', data.rates))
-		}
+		},
+		// async getAllRates({commit}) {
+		// 	let url = 'https://api.coingecko.com/api/v3/exchange_rates'
+			
+		// 	await fetch(url, {
+		// 		"method": "GET",
+		// 		"headers": {
+		// 			'cache-control': 'public,max-age=120',
+		// 			'content-type': 'application/json; charset=utf-8',
+
+		// 		}
+		// 	}).then(res => res.json()).then(data => commit('setRates', data.rates))
+		// }
   },
 })

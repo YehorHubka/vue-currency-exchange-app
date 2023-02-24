@@ -3,12 +3,7 @@
   <main class="main">
     <div class="main__wrapper" v-if="rates">
       <h1 class="main__title">Choose currency bellow:</h1>
-      <loader v-if="!rates" />
-      <div class="exchange" v-else>
-        <div class="exchange__info">
-          Last updated:
-          <strong>{{ new Date(data.time).toLocaleString() }}</strong>
-        </div>
+      <div class="exchange">
         <exchangeField
           :currencyList="currencyList"
           v-model:currencyInput="originalCurrencyInput"
@@ -32,8 +27,7 @@
       </div>
 
       <h2 class="main__title">Currency rates</h2>
-      <loader v-if="!rates" />
-      <div class="rates" v-else>
+      <div class="rates">
         <div class="rates__info">
           <div class="rates__info-title">
             Choose interested currency to have an rates information:
@@ -50,7 +44,7 @@
         </div>
         <div class="rates__cards">
           <rateCard
-            v-for="(rate, i) in choosenRatesDataFromStorage"
+            v-for="(rate, i) in choosenRatesData"
             :key="i"
             :name="rate.asset_id_quote"
             :rate="rate.rate"
@@ -88,11 +82,7 @@
         </cardModal>
       </Teleport>
     </div>
-    <div class="server_info" v-else>
-      <loader />
-      <h1>Service coinapi.io temporary dont give an ansewer from REST API</h1>
-      <p>So, unfortunately, App dont work at the moment :(</p>
-    </div>
+    <loader v-else />
   </main>
 </template>
 
@@ -114,7 +104,7 @@ export default defineComponent({
       addCardName: "",
       openModal: false,
       choosenRatesData: [] as Array<any>,
-      choosenRatesDataFromStorage: [] as Array<any>,
+      choosenRatesFromStorage: [] as Array<any>,
       choosenRates: ["USD", "EUR", "UAH", "BTC", "ETH"],
       interestedCurrencyList: ["USD", "EUR", "UAH"],
       interestedCurrency: "USD",
@@ -124,6 +114,7 @@ export default defineComponent({
       desiredCurrency: "BTC",
       currencyList: ["USD", "EUR", "UAH", "GBP", "BTC", "ETH", "BNB", "XRP"],
       currentRate: 0,
+      startRate: 0,
     };
   },
   methods: {
@@ -150,31 +141,33 @@ export default defineComponent({
     async getAllDataToShow() {
       await this.getAllRates([this.interestedCurrency, false]);
 
-      this.choosenRatesData = this.choosenRates
-        .map((i) => {
-          return this.rates.find((item: any) => {
-            return item.asset_id_quote == i;
-          });
-        })
-        .filter((i) => i !== undefined);
+      if (!JSON.parse(localStorage.getItem("choosenRates") || "[]")) {
+        localStorage.setItem("choosenRates", JSON.stringify(this.choosenRates));
+      } else {
+        this.choosenRatesFromStorage = JSON.parse(
+          localStorage.getItem("choosenRates") || "[]"
+        );
 
-      localStorage.setItem(
-        "choosenRatesData",
-        JSON.stringify(this.choosenRatesData)
-      );
-
-      this.choosenRatesDataFromStorage = JSON.parse(
-        localStorage.getItem("choosenRatesData") || "[]"
-      );
+        this.choosenRatesData = this.choosenRatesFromStorage
+          .map((i) => {
+            return this.rates.find((item: any) => {
+              return item.asset_id_quote == i;
+            });
+          })
+          .filter((i) => i !== undefined);
+      }
     },
     cardFormHandler() {
       if (this.addCardName) {
-        this.choosenRates.push(this.addCardName);
+        this.choosenRatesFromStorage.push(this.addCardName);
         localStorage.setItem(
-          "choosenRatesData",
-          JSON.stringify(this.choosenRatesDataFromStorage)
+          "choosenRates",
+          JSON.stringify(this.choosenRatesFromStorage)
         );
       }
+      this.choosenRatesFromStorage = JSON.parse(
+        localStorage.getItem("choosenRatesData") || "[]"
+      );
       this.getAllDataToShow();
 
       this.addCardName = "";
