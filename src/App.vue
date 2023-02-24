@@ -153,12 +153,9 @@ export default defineComponent({
     async getAllDataToShow() {
       await this.getAllRates([this.interestedCurrency, false]);
 
-      if (!!JSON.parse(localStorage.getItem("choosenRates") || "[]")) {
+      if (!JSON.parse(localStorage.getItem("choosenRates") || "[]")) {
         localStorage.setItem("choosenRates", JSON.stringify(this.choosenRates));
         localStorage.setItem("ratesForUSD", JSON.stringify(this.rates));
-        this.ratesForUSD = JSON.parse(
-          localStorage.getItem("ratesForUSD") || "[]"
-        );
       } else {
         this.choosenRatesFromStorage = JSON.parse(
           localStorage.getItem("choosenRates") || "[]"
@@ -221,6 +218,7 @@ export default defineComponent({
       if (newState < 0 || newState == "") {
         this.originalCurrencyInput = 1;
       }
+
       newState > this.maxValue
         ? (this.isBigValue = true)
         : (this.isBigValue = false);
@@ -234,15 +232,18 @@ export default defineComponent({
   computed: {
     ...mapState(["data", "rates"]),
     maxValue(): number {
-      let rate = 0;
+      let val = 0;
       if (this.originalCurrency !== "USD") {
-        rate = this.ratesForUSD.filter(
-          (i) => i.asset_id_quote == this.originalCurrency
+        const ratesData = JSON.parse(
+          localStorage.getItem("ratesForUSD") || "[]"
+        );
+        val = ratesData.filter(
+          (i: any) => i.asset_id_quote == this.originalCurrency
         )[0].rate;
       } else {
-        rate = 1;
+        val = 1;
       }
-      return rate * this.maximumValue;
+      return val * this.maximumValue;
     },
   },
   components: {
@@ -273,7 +274,7 @@ export default defineComponent({
 }
 .exchange {
   margin: 0 auto 60px;
-  max-width: 320px;
+  max-width: 350px;
   position: relative;
   &__alert {
     position: absolute;

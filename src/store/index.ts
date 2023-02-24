@@ -24,7 +24,7 @@ export default createStore({
 			
 			await fetch(url, {
 				"method": "GET",
-				"headers": {'X-CoinAPI-Key': '22BE6FFA-21EF-4612-8E47-CE0505683190'}
+				"headers": {'X-CoinAPI-Key': '3DB9D937-1B34-4979-9D45-566ADA46A55A'}
 			}).then(res => res.json()).then(data => commit('setData', data))
 		},
 		async getAllRates({commit}, [base, quote]) {
@@ -32,7 +32,7 @@ export default createStore({
 			
 			await fetch(url, {
 				"method": "GET",
-				"headers": {'X-CoinAPI-Key': '22BE6FFA-21EF-4612-8E47-CE0505683190'}
+				"headers": {'X-CoinAPI-Key': '3DB9D937-1B34-4979-9D45-566ADA46A55A'}
 			}).then(res => res.json()).then(data => commit('setRates', data.rates))
 		},
 		// async getAllRates({commit}) {
