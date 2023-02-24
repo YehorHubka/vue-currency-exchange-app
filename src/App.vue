@@ -1,9 +1,9 @@
 <template>
   <Header />
   <main class="main">
-    <div class="main__wrapper">
+    <div class="main__wrapper" v-if="rates">
       <h1 class="main__title">Choose currency bellow:</h1>
-      <loader v-if="!data" />
+      <loader v-if="!rates" />
       <div class="exchange" v-else>
         <div class="exchange__info">
           Last updated:
@@ -33,7 +33,7 @@
 
       <h2 class="main__title">Currency rates</h2>
       <loader v-if="!rates" />
-      <div class="rates">
+      <div class="rates" v-else>
         <div class="rates__info">
           <div class="rates__info-title">
             Choose interested currency to have an rates information:
@@ -60,7 +60,10 @@
           <button class="btn" @click="openModal = true">
             + Add more cards
           </button>
-          <button class="btn">Refresh data</button>
+          <button class="btn" @click="refreshData" :disabled="refreshDisabled">
+            Refresh data
+            <span v-if="refreshDisabled">({{ refreshDisabledDuration }})</span>
+          </button>
         </div>
       </div>
       <Teleport to="body">
@@ -85,6 +88,11 @@
         </cardModal>
       </Teleport>
     </div>
+    <div class="server_info" v-else>
+      <loader />
+      <h1>Service coinapi.io temporary dont give an ansewer from REST API</h1>
+      <p>So, unfortunately, App dont work at the moment :(</p>
+    </div>
   </main>
 </template>
 
@@ -101,6 +109,8 @@ export default defineComponent({
   name: "App",
   data() {
     return {
+      refreshDisabled: false,
+      refreshDisabledDuration: 5,
       addCardName: "",
       openModal: false,
       choosenRatesData: [] as Array<any>,
@@ -117,7 +127,7 @@ export default defineComponent({
     };
   },
   methods: {
-    ...mapActions(["getCurrencyData", "getAllCurrencyData"]),
+    ...mapActions(["getCurrencyData", "getAllRates"]),
     switchCurrency() {
       let temporaryValue = this.originalCurrency;
       this.originalCurrency = this.desiredCurrency;
@@ -138,7 +148,7 @@ export default defineComponent({
       this.desiredCurrencyInput = this.currentRate * this.originalCurrencyInput;
     },
     async getAllDataToShow() {
-      await this.getAllCurrencyData([this.interestedCurrency, false]);
+      await this.getAllRates([this.interestedCurrency, false]);
 
       this.choosenRatesData = this.choosenRates
         .map((i) => {
@@ -165,10 +175,27 @@ export default defineComponent({
           JSON.stringify(this.choosenRatesDataFromStorage)
         );
       }
-      console.log("this.choosenRates", this.choosenRates);
+      this.getAllDataToShow();
 
       this.addCardName = "";
       this.openModal = false;
+    },
+    countDownTimer() {
+      if (this.refreshDisabledDuration > 0) {
+        setTimeout(() => {
+          this.refreshDisabledDuration -= 1;
+          this.countDownTimer();
+        }, 1000);
+      }
+    },
+    refreshData() {
+      this.getAllDataToShow();
+      this.refreshDisabled = true;
+      this.refreshDisabledDuration = 5;
+      this.countDownTimer();
+      setTimeout(() => {
+        this.refreshDisabled = false;
+      }, this.refreshDisabledDuration * 1000);
     },
   },
   watch: {
@@ -325,6 +352,10 @@ export default defineComponent({
   &:hover {
     background: #222;
   }
+  &:disabled {
+    background: #ccc;
+    cursor: inherit;
+  }
 }
 .search-input {
   outline: 0;
@@ -341,5 +372,10 @@ export default defineComponent({
 }
 .btn-search {
   width: 100%;
+}
+.server_info {
+  text-align: center;
+  max-width: 600px;
+  margin: 50px auto;
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <header class="header">
     <div class="header__logo">
-      <img width="40" alt="Vue logo" src="../assets/logo.png" />
+      <img width="40" alt="Vue logo" src="@/assets/logo.png" />
     </div>
     <div class="header__title">Currency Exchange App</div>
   </header>

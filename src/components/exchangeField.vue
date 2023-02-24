@@ -3,7 +3,7 @@
     <select
       class="exchange__select"
       :value="currency"
-      @change="$emit('update:currency', $event.target.value)"
+      @change="$emit('update:currency', ($event.target as HTMLSelectElement).value)"
     >
       <option
         v-for="(currency, idx) in currencyList"
@@ -18,7 +18,7 @@
       type="number"
       :value="currencyInput"
       :disabled="disabledInput"
-      @input="$emit('update:currencyInput', parseInt($event.target.value))"
+      @input="$emit('update:currencyInput', parseInt(($event.target as HTMLInputElement).value))"
     />
   </div>
 </template>

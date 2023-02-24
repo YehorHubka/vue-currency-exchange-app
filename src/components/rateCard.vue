@@ -18,7 +18,7 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .rate-card {
-  width: 150px;
+  width: 137px;
   text-align: center;
   padding: 30px 10px;
   background: #fff;
