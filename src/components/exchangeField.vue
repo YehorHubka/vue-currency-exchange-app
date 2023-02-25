@@ -52,6 +52,7 @@ export default defineComponent({
     border-radius: 5px 0 0 5px;
     font-size: 16px;
     outline: 0;
+    color: #000;
   }
   &__input {
     outline: 0;
@@ -64,6 +65,7 @@ export default defineComponent({
     border-radius: 0 5px 5px 0;
     font-size: 16px;
     font-weight: bold;
+    color: #000;
   }
 }
 </style>

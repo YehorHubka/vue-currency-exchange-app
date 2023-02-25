@@ -153,22 +153,53 @@ export default defineComponent({
     async getAllDataToShow() {
       await this.getAllRates([this.interestedCurrency, false]);
 
-      if (!JSON.parse(localStorage.getItem("choosenRates") || "[]")) {
+      console.log(
+        "set rates",
+        JSON.parse(localStorage.getItem("choosenRates") || "[]")
+      );
+
+      if (
+        JSON.parse(localStorage.getItem("choosenRates") || "[]").length == 0
+      ) {
         localStorage.setItem("choosenRates", JSON.stringify(this.choosenRates));
         localStorage.setItem("ratesForUSD", JSON.stringify(this.rates));
+
+        // this.choosenRatesData = this.choosenRates
+        //   .map((i) => {
+        //     return this.rates.find((item: any) => {
+        //       return item.asset_id_quote == i;
+        //     });
+        //   })
+        //   .filter((i) => i !== undefined);
+
+        this.choosenRatesData = this.getChoosenRates(this.choosenRates);
+        console.log("set this.choosenRatesData", this.choosenRatesData);
       } else {
         this.choosenRatesFromStorage = JSON.parse(
           localStorage.getItem("choosenRates") || "[]"
         );
 
-        this.choosenRatesData = this.choosenRatesFromStorage
-          .map((i) => {
-            return this.rates.find((item: any) => {
-              return item.asset_id_quote == i;
-            });
-          })
-          .filter((i) => i !== undefined);
+        // this.choosenRatesData = this.choosenRatesFromStorage
+        //   .map((i) => {
+        //     return this.rates.find((item: any) => {
+        //       return item.asset_id_quote == i;
+        //     });
+        //   })
+        //   .filter((i) => i !== undefined);
+
+        this.choosenRatesData = this.getChoosenRates(
+          this.choosenRatesFromStorage
+        );
       }
+    },
+    getChoosenRates(arr: Array<string>) {
+      return arr
+        .map((i: string) => {
+          return this.rates.find((item: any) => {
+            return item.asset_id_quote == i;
+          });
+        })
+        .filter((i: string | undefined) => i !== undefined);
     },
     cardFormHandler() {
       if (this.addCardName) {
@@ -354,6 +385,7 @@ export default defineComponent({
       border-radius: 5px;
       font-size: 16px;
       outline: 0;
+      color: #000;
     }
   }
   &__cards {
